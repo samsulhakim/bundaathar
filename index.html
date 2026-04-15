@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dapur Bunda Athar - Lezat & Higienis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/releases/v6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        .hero-bg {
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-5px);
+            transition: all 0.3s ease;
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 10px;
+        }
+
+        .admin-only {
+            display: none;
+        }
+
+        body.admin-mode .admin-only {
+            display: block;
+        }
+
+        /* Gaya untuk Logo Bulat */
+        .logo-nav {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid #ea580c;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Navigasi -->
+    <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md shadow-sm">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <img src="WhatsApp Image 2026-04-15 at 13.16.55.jpeg" alt="Logo Bunda Athar" class="logo-nav">
+                <h1 class="text-xl font-bold text-orange-600">Dapur<span class="text-gray-800">BundaAthar</span></h1>
+            </div>
+            <div class="hidden md:flex space-x-6 font-medium items-center">
+                <a href="#home" class="hover:text-orange-600">Beranda</a>
+                <a href="#menu" class="hover:text-orange-600">Menu</a>
+                <a href="#lokasi" class="hover:text-orange-600">Lokasi</a>
+                <button id="admin-btn" onclick="handleAdminLogin()" class="text-xs bg-gray-200 px-2 py-1 rounded hover:bg-gray-300 transition-colors">Admin</button>
+            </div>
+            <button onclick="showCart()" class="relative p-2 bg-orange-100 rounded-full text-orange-600">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <span id="cart-count" class="cart-badge">0</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-bg h-screen flex items-center justify-center text-center text-white px-4">
+        <div>
+            <div class="mb-6 flex justify-center">
+                <img src="WhatsApp Image 2026-04-15 at 13.16.55.jpeg" alt="Logo Hero" class="w-32 h-32 md:w-40 md:h-40 object-cover rounded-full border-4 border-white shadow-2xl">
+            </div>
+            <h2 class="text-4xl md:text-6xl font-bold mb-4">Dapur Bunda Athar</h2>
+            <p class="text-lg md:text-xl mb-8 max-w-2xl mx-auto">Kami menerima pesanan kue brownies andalan dapur bunda athar. Kami juga menyediakan masakan mie jebew dan menu lainnya. Siap antar ke rumah atau pesan lewat WA.</p>
+            <div class="flex flex-col md:flex-row gap-4 justify-center">
+                <a href="#menu" class="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-full font-bold transition">Lihat Menu</a>
+                <a href="https://wa.me/6285731606497" target="_blank" class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full font-bold transition flex items-center justify-center">
+                    <i class="fa-brands fa-whatsapp mr-2 text-xl"></i>Pesan via WhatsApp
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Menu Section -->
+    <section id="menu" class="py-20 container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-900">Menu Andalan Kami</h2>
+            <p class="text-gray-600 mt-2">Dari Brownies lembut hingga Mie Jebew yang nendang!</p>
+            <button onclick="openMenuModal()" class="admin-only mt-6 mx-auto bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition">
+                <i class="fa-solid fa-plus mr-2"></i> Tambah Menu Baru
+            </button>
+        </div>
+
+        <div id="menu-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Item menu akan dimasukkan oleh JavaScript -->
+        </div>
+    </section>
+
+    <!-- Lokasi Section -->
+    <section id="lokasi" class="py-20 container mx-auto px-4 border-t border-gray-100">
+        <div class="flex flex-col md:flex-row gap-12 items-center">
+            <div class="md:w-1/2">
+                <h2 class="text-3xl font-bold mb-6">Kunjungi Dapur Kami</h2>
+                <p class="text-gray-600 mb-4 text-lg">Warga sekitar bisa langsung datang untuk mengambil pesanan atau makan di tempat.</p>
+                <div class="space-y-4">
+                    <div class="flex items-start space-x-4">
+                        <div class="bg-orange-100 p-3 rounded-full text-orange-600">
+                            <i class="fa-solid fa-location-dot"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold">Alamat</h4>
+                            <p class="text-gray-600">Dsn Sumbersari RT054/RW012, Barat, Kec. Padang, Kab.Lumajang 67352</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-4">
+                        <div class="bg-orange-100 p-3 rounded-full text-orange-600">
+                            <i class="fa-solid fa-clock"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold">Jam Buka</h4>
+                            <p class="text-gray-600">Setiap Hari: 10:00 - 21:00 WIB</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="md:w-1/2 w-full h-80 bg-gray-200 rounded-2xl overflow-hidden flex items-center justify-center relative shadow-lg group">
+                <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Interior Kedai" class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500">
+                <div class="relative bg-white/95 p-6 rounded-xl shadow-xl text-center mx-4 max-w-sm">
+                    <i class="fa-solid fa-map-location-dot text-3xl text-orange-600 mb-3"></i>
+                    <p class="font-bold text-gray-800 mb-2">Temukan Kami di Google Maps</p>
+                    <a href="https://www.google.com/maps/search/Dsn+Sumbersari+RT054+RW012+Padang+Lumajang" target="_blank" class="inline-block bg-orange-600 text-white px-6 py-2 rounded-full font-bold hover:bg-orange-700 transition shadow-md">Buka Navigasi Sekarang</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="kontak" class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+            <div>
+                <div class="flex items-center justify-center md:justify-start space-x-3 mb-4">
+                    <img src="WhatsApp Image 2026-04-15 at 13.16.55.jpeg" alt="Logo Footer" class="w-10 h-10 rounded-full border border-orange-500 object-cover">
+                    <h3 class="text-2xl font-bold text-orange-500">Dapur Bunda Athar</h3>
+                </div>
+                <p class="text-gray-400">Brownies andalan & Mie Jebew spesial untuk warga sekitar.</p>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4">Kontak Kami</h4>
+                <p class="text-gray-400 mb-2 font-medium">Dsn Sumbersari RT054/RW012, Padang, Lumajang</p>
+                <p class="text-gray-400 mb-2"><i class="fa-solid fa-phone mr-2"></i> +62 857-3160-6497</p>
+                <p class="text-gray-400"><i class="fa-solid fa-envelope mr-2"></i> halo@bundathar.com</p>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4">Ikuti Kami</h4>
+                <div class="flex justify-center md:justify-start space-x-4">
+                    <a href="https://www.tiktok.com/@browniesbundaathar_?_r=1&_t=ZS-95YHCPwLi8S" target="_blank" class="bg-gray-800 p-3 rounded-full hover:bg-orange-600 transition" title="TikTok Dapur Bunda Athar">
+                        <i class="fa-brands fa-tiktok"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-500 text-sm">
+            <p>&copy; 2024 Dapur Bunda Athar. Semua Hak Dilindungi.</p>
+        </div>
+    </footer>
+
+    <!-- Modals (Admin, Menu, Keranjang) -->
+    <div id="password-modal" class="fixed inset-0 bg-black/70 z-[120] hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl">
+            <h3 class="text-xl font-bold mb-4 text-gray-800">Masuk Mode Admin</h3>
+            <input type="password" id="admin-password" placeholder="Kata Sandi" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none mb-4">
+            <div class="flex space-x-3">
+                <button onclick="closePasswordModal()" class="flex-1 bg-gray-200 py-2 rounded-lg font-bold">Batal</button>
+                <button onclick="checkAdminPassword()" class="flex-1 bg-orange-600 text-white py-2 rounded-lg font-bold">Masuk</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="menu-modal" class="fixed inset-0 bg-black/50 z-[110] hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <h3 id="modal-title" class="text-xl font-bold mb-4">Manajemen Menu</h3>
+            <form id="menu-form" onsubmit="saveMenu(event)">
+                <input type="hidden" id="edit-index">
+                <input type="hidden" id="menu-image-data">
+                <div class="space-y-4">
+                    <input type="text" id="menu-name" placeholder="Nama Menu" required class="w-full px-4 py-2 border rounded-lg">
+                    <input type="number" id="menu-price" placeholder="Harga" required class="w-full px-4 py-2 border rounded-lg">
+                    <textarea id="menu-desc" placeholder="Deskripsi" required class="w-full px-4 py-2 border rounded-lg h-24"></textarea>
+                    <input type="file" id="menu-image-input" accept="image/*" onchange="previewImage(this)" class="w-full text-sm">
+                </div>
+                <div class="flex space-x-3 mt-6">
+                    <button type="button" onclick="closeMenuModal()" class="flex-1 bg-gray-200 py-2 rounded-lg font-bold">Batal</button>
+                    <button type="submit" class="flex-1 bg-orange-600 text-white py-2 rounded-lg font-bold">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="cart-modal" class="fixed inset-0 bg-black/50 z-[100] hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Keranjang</h3>
+                <button onclick="closeCart()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div id="cart-items" class="space-y-3 mb-6 max-h-60 overflow-y-auto"></div>
+            <div class="border-t pt-4">
+                <div class="flex justify-between font-bold text-lg mb-6">
+                    <span>Total:</span>
+                    <span id="cart-total" class="text-orange-600">Rp 0</span>
+                </div>
+                <button onclick="checkoutWhatsApp()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold flex items-center justify-center space-x-2">
+                    <i class="fa-brands fa-whatsapp text-xl"></i>
+                    <span>Pesan via WhatsApp</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full opacity-0 pointer-events-none transition-all duration-300 z-[150]"></div>
+
+    <script>
+        const ADMIN_PASSWORD = "bundaathar123"; 
+        const phone_number = "6285731606497"; 
+
+        const defaultMenu = [
+            {
+                name: 'Brownies Panggang',
+                price: 45000,
+                desc: 'Brownies andalan Dapur Bunda Athar yang fudgy dan premium.',
+                image: 'https://images.unsplash.com/photo-1606312619070-d48b4c652a52?auto=format&fit=crop&w=500&q=60'
+            },
+            {
+                name: 'Mie Jebew Spesial',
+                price: 15000,
+                desc: 'Mie pedas khas dengan bumbu rempah pilihan Lumajang.',
+                image: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=500&q=60'
+            }
+        ];
+
+        let menuData = JSON.parse(localStorage.getItem('bunda_athar_menu')) || defaultMenu;
+        let cart = [];
+
+        function renderMenu() {
+            const container = document.getElementById('menu-container');
+            container.innerHTML = '';
+            menuData.forEach((item, index) => {
+                container.innerHTML += `
+                    <div class="bg-white rounded-2xl shadow-md overflow-hidden menu-card relative">
+                        <div class="admin-only absolute top-2 right-2 flex space-x-2 z-10">
+                            <button onclick="editMenu(${index})" class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg"><i class="fa-solid fa-pen text-xs"></i></button>
+                            <button onclick="deleteMenu(${index})" class="bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg"><i class="fa-solid fa-trash text-xs"></i></button>
+                        </div>
+                        <img src="${item.image}" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="text-xl font-bold">${item.name}</h3>
+                                <span class="text-orange-600 font-bold">Rp ${item.price.toLocaleString('id-ID')}</span>
+                            </div>
+                            <p class="text-gray-600 text-sm mb-4">${item.desc}</p>
+                            <button onclick="addToCart('${item.name}', ${item.price})" class="w-full border-2 border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white py-2 rounded-lg font-semibold transition">Pesan</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function handleAdminLogin() {
+            if (document.body.classList.contains('admin-mode')) {
+                document.body.classList.remove('admin-mode');
+                document.getElementById('admin-btn').innerText = 'Admin';
+            } else {
+                document.getElementById('password-modal').style.display = 'flex';
+            }
+        }
+
+        function closePasswordModal() { document.getElementById('password-modal').style.display = 'none'; }
+        
+        function checkAdminPassword() {
+            if (document.getElementById('admin-password').value === ADMIN_PASSWORD) {
+                document.body.classList.add('admin-mode');
+                document.getElementById('admin-btn').innerText = 'Keluar';
+                closePasswordModal();
+                renderMenu();
+            } else { alert('Kata sandi salah!'); }
+        }
+
+        function addToCart(name, price) {
+            cart.push({ name, price });
+            updateCartUI();
+            showToast('Ditambahkan ke keranjang!');
+        }
+
+        function updateCartUI() {
+            document.getElementById('cart-count').innerText = cart.length;
+            const container = document.getElementById('cart-items');
+            const totalDisplay = document.getElementById('cart-total');
+            container.innerHTML = cart.length ? '' : '<p class="text-center py-4 text-gray-400">Keranjang masih kosong</p>';
+            let total = 0;
+            cart.forEach((item, i) => {
+                total += item.price;
+                container.innerHTML += `<div class="flex justify-between text-sm py-1"><span>${item.name}</span><span>Rp ${item.price.toLocaleString()}</span></div>`;
+            });
+            totalDisplay.innerText = `Rp ${total.toLocaleString('id-ID')}`;
+        }
+
+        function showCart() { document.getElementById('cart-modal').style.display = 'flex'; }
+        function closeCart() { document.getElementById('cart-modal').style.display = 'none'; }
+        
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg; toast.style.opacity = '1';
+            setTimeout(() => toast.style.opacity = '0', 2000);
+        }
+
+        function checkoutWhatsApp() {
+            if (cart.length === 0) return;
+            let msg = "Halo Bunda Athar, saya mau pesan:\n";
+            cart.forEach(it => msg += `- ${it.name}\n`);
+            window.open(`https://wa.me/${phone_number}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        function openMenuModal() { document.getElementById('menu-modal').style.display = 'flex'; }
+        function closeMenuModal() { document.getElementById('menu-modal').style.display = 'none'; }
+        
+        function saveMenu(e) {
+            e.preventDefault();
+            const newItem = {
+                name: document.getElementById('menu-name').value,
+                price: parseInt(document.getElementById('menu-price').value),
+                desc: document.getElementById('menu-desc').value,
+                image: document.getElementById('menu-image-data').value || 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=500&q=60'
+            };
+            menuData.push(newItem);
+            localStorage.setItem('bunda_athar_menu', JSON.stringify(menuData));
+            renderMenu(); closeMenuModal();
+            showToast("Menu baru disimpan!");
+        }
+
+        function previewImage(input) {
+            const reader = new FileReader();
+            reader.onload = (e) => document.getElementById('menu-image-data').value = e.target.result;
+            if(input.files[0]) reader.readAsDataURL(input.files[0]);
+        }
+
+        function deleteMenu(i) {
+            if(confirm("Hapus menu ini?")) {
+                menuData.splice(i, 1);
+                localStorage.setItem('bunda_athar_menu', JSON.stringify(menuData));
+                renderMenu();
+            }
+        }
+
+        renderMenu();
+    </script>
+</body>
+</html>
