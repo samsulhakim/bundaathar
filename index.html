@@ -58,26 +58,53 @@
 </head>
 <body class="bg-gray-50 text-gray-800">
 
-    <!-- Navigasi -->
     <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md shadow-sm">
         <div class="container mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center space-x-3">
                 <h1 class="text-xl font-bold text-orange-600">Dapur<span class="text-gray-800">BundaAthar</span></h1>
             </div>
+            
             <div class="hidden md:flex space-x-6 font-medium items-center">
                 <a href="#home" class="hover:text-orange-600">Beranda</a>
                 <a href="#menu" class="hover:text-orange-600">Menu</a>
                 <a href="#lokasi" class="hover:text-orange-600">Lokasi</a>
                 <button id="admin-btn" onclick="handleAdminLogin()" class="text-xs bg-gray-200 px-3 py-1 rounded-full hover:bg-orange-100 hover:text-orange-600 transition-all">Login Admin</button>
             </div>
-            <button onclick="showCart()" class="relative p-2 bg-orange-100 rounded-full text-orange-600">
-                <i class="fa-solid fa-cart-shopping"></i>
-                <span id="cart-count" class="cart-badge">0</span>
-            </button>
+
+            <div class="flex items-center space-x-3">
+                <button onclick="showCart()" class="relative p-2 bg-orange-100 rounded-full text-orange-600">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span id="cart-count" class="cart-badge">0</span>
+                </button>
+                <button onclick="toggleMobileMenu()" class="p-2 text-gray-700 md:hidden hover:text-orange-600 focus:outline-none">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
         </div>
     </nav>
 
-    <!-- Hero Section -->
+    <div id="mobile-sidebar" class="fixed inset-y-0 left-0 w-64 bg-white shadow-2xl z-[60] transform -translate-x-full transition-transform duration-300 ease-in-out md:hidden flex flex-col justify-between">
+        <div>
+            <div class="p-4 border-b flex justify-between items-center">
+                <h2 class="text-lg font-bold text-orange-600">Menu Navigasi</h2>
+                <button onclick="toggleMobileMenu()" class="text-gray-500 hover:text-gray-800">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="flex flex-col p-4 space-y-4 font-medium">
+                <a href="#home" onclick="toggleMobileMenu()" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"><i class="fa-solid fa-house w-5"></i> <span>Beranda</span></a>
+                <a href="#menu" onclick="toggleMobileMenu()" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"><i class="fa-solid fa-utensils w-5"></i> <span>Menu</span></a>
+                <a href="#lokasi" onclick="toggleMobileMenu()" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"><i class="fa-solid fa-map-location-dot w-5"></i> <span>Lokasi</span></a>
+            </div>
+        </div>
+        <div class="p-4 border-t">
+            <button id="admin-btn-mobile" onclick="toggleMobileMenu(); handleAdminLogin()" class="w-full text-center text-sm bg-gray-100 py-2 rounded-xl hover:bg-orange-100 hover:text-orange-600 transition-all font-medium">Login Admin</button>
+        </div>
+    </div>
+
+    <div id="sidebar-overlay" onclick="toggleMobileMenu()" class="fixed inset-0 bg-black/40 z-50 hidden md:hidden opacity-0 transition-opacity duration-300"></div>
+
+
     <section id="home" class="hero-bg h-screen flex items-center justify-center text-center text-white px-4 relative">
         <div class="z-10">
             <h2 id="hero-title" class="text-4xl md:text-6xl font-bold mb-4 uppercase tracking-wider">Dapur Bunda Athar</h2>
@@ -88,7 +115,6 @@
                     <i class="fa-brands fa-whatsapp mr-2 text-xl"></i>Pesan via WhatsApp
                 </a>
             </div>
-            <!-- Fitur Edit Deskripsi (Admin Only) -->
             <div class="admin-only absolute bottom-10 left-1/2 -translate-x-1/2">
                 <button onclick="openHeroEditModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full font-bold shadow-xl flex items-center gap-2 transition-all scale-110">
                     <i class="fa-solid fa-pen-to-square"></i> Edit Deskripsi Website
@@ -97,7 +123,6 @@
         </div>
     </section>
 
-    <!-- Menu Section -->
     <section id="menu" class="py-20 container mx-auto px-4">
         <div class="text-center mb-12">
             <h2 class="text-3xl font-bold text-gray-900">Menu Andalan Kami</h2>
@@ -108,11 +133,9 @@
         </div>
 
         <div id="menu-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Menu items generated by JS -->
-        </div>
+            </div>
     </section>
 
-    <!-- Lokasi Section -->
     <section id="lokasi" class="py-20 container mx-auto px-4 border-t border-gray-100">
         <div class="flex flex-col md:flex-row gap-12 items-center">
             <div class="md:w-1/2">
@@ -138,7 +161,6 @@
                     </div>
                 </div>
             </div>
-            <!-- Area Peta (Placeholder) -->
             <div class="md:w-1/2 w-full h-80 bg-gray-100 rounded-2xl overflow-hidden shadow-lg flex flex-col items-center justify-center p-6 text-center border-2 border-dashed border-gray-300">
                 <i class="fa-solid fa-map-location-dot text-5xl text-orange-300 mb-4"></i>
                 <p class="text-gray-500 mb-6 font-medium">Temukan lokasi presisi kami melalui Google Maps</p>
@@ -149,7 +171,6 @@
         </div>
     </section>
 
-    <!-- Footer -->
     <footer id="kontak" class="bg-gray-900 text-white py-12">
         <div class="container mx-auto px-4 text-center">
             <h3 class="text-2xl font-bold text-orange-500 mb-4">Dapur Bunda Athar</h3>
@@ -159,14 +180,11 @@
                 <a href="https://www.tiktok.com/@browniesbundaathar_?_r=1&_t=ZS-95YHCPwLi8S" target="_blank" class="bg-pink-600 p-3 rounded-full hover:scale-110 transition"><i class="fa-brands fa-tiktok"></i></a>
             </div>
             <div class="mt-10 pt-8 border-t border-gray-800 text-gray-500 text-sm">
-                &copy; 2026 Dapur Bunda Athar.
+                © 2026 Dapur Bunda Athar.
             </div>
         </div>
     </footer>
 
-    <!-- Modals -->
-
-    <!-- Modal Login Admin -->
     <div id="password-modal" class="fixed inset-0 bg-black/70 z-[120] hidden items-center justify-center p-4">
         <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl relative">
             <button onclick="closePasswordModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
@@ -182,7 +200,6 @@
         </div>
     </div>
 
-    <!-- Modal Edit Hero -->
     <div id="hero-edit-modal" class="fixed inset-0 bg-black/50 z-[115] hidden items-center justify-center p-4">
         <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl relative">
             <h3 class="text-xl font-bold mb-4">Edit Teks Website</h3>
@@ -205,7 +222,6 @@
         </div>
     </div>
 
-    <!-- Modal Menu -->
     <div id="menu-modal" class="fixed inset-0 bg-black/50 z-[110] hidden items-center justify-center p-4">
         <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl overflow-y-auto max-h-[90vh] relative">
             <h3 id="modal-title" class="text-xl font-bold mb-4">Formulir Menu</h3>
@@ -242,7 +258,6 @@
         </div>
     </div>
 
-    <!-- Modal Keranjang -->
     <div id="cart-modal" class="fixed inset-0 bg-black/50 z-[100] hidden items-center justify-center p-4">
         <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl relative">
             <h3 class="text-xl font-bold mb-4">Keranjang Belanja</h3>
@@ -284,6 +299,22 @@
         };
         let cart = [];
 
+        // Fungsi Tambahan untuk Buka/Tutup Sidebar Mobile
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.add('opacity-100'), 10);
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.remove('opacity-100');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+            }
+        }
+
         function updateSiteContent() {
             document.getElementById('hero-title').innerText = siteData.title;
             document.getElementById('hero-desc').innerText = siteData.description;
@@ -315,11 +346,18 @@
 
         // Admin Auth
         function handleAdminLogin() {
+            const btnDesktop = document.getElementById('admin-btn');
+            const btnMobile = document.getElementById('admin-btn-mobile');
+
             if (document.body.classList.contains('admin-mode')) {
                 document.body.classList.remove('admin-mode');
-                const btn = document.getElementById('admin-btn');
-                btn.innerText = 'Login Admin';
-                btn.className = "text-xs bg-gray-200 px-3 py-1 rounded-full hover:bg-orange-100 hover:text-orange-600 transition-all";
+                
+                btnDesktop.innerText = 'Login Admin';
+                btnDesktop.className = "text-xs bg-gray-200 px-3 py-1 rounded-full hover:bg-orange-100 hover:text-orange-600 transition-all";
+                
+                btnMobile.innerText = 'Login Admin';
+                btnMobile.className = "w-full text-center text-sm bg-gray-100 py-2 rounded-xl hover:bg-orange-100 hover:text-orange-600 transition-all font-medium";
+                
                 showToast('Mode Admin Dinonaktifkan');
                 renderMenu();
             } else {
@@ -331,9 +369,16 @@
         function checkAdminPassword() {
             if (document.getElementById('admin-password').value === ADMIN_PASSWORD) {
                 document.body.classList.add('admin-mode');
-                const btn = document.getElementById('admin-btn');
-                btn.innerText = 'Keluar Admin';
-                btn.className = "text-xs bg-orange-600 text-white px-3 py-1 rounded-full hover:bg-orange-700 transition-all";
+                
+                const btnDesktop = document.getElementById('admin-btn');
+                const btnMobile = document.getElementById('admin-btn-mobile');
+                
+                btnDesktop.innerText = 'Keluar Admin';
+                btnDesktop.className = "text-xs bg-orange-600 text-white px-3 py-1 rounded-full hover:bg-orange-700 transition-all";
+                
+                btnMobile.innerText = 'Keluar Admin';
+                btnMobile.className = "w-full text-center text-sm bg-orange-600 text-white py-2 rounded-xl hover:bg-orange-700 transition-all font-medium";
+                
                 closePasswordModal();
                 showToast('Anda masuk sebagai Admin');
                 renderMenu();
