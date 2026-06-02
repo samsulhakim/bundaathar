@@ -275,7 +275,7 @@
                 © 2026 Dapur Bunda Athar. All Rights Reserved.
             </div>
         </div>
-    </footer>
+    </nav>
 
     <div id="custom-alert-modal" class="fixed inset-0 bg-black/75 z-[150] hidden items-center justify-center p-4 backdrop-blur-sm transition-all">
         <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl relative border border-orange-50 transform scale-95 transition-all">
@@ -284,8 +284,7 @@
                     <i id="alert-icon" class="text-3xl"></i>
                 </div>
                 <h3 id="alert-title" class="text-xl font-extrabold text-gray-900 mb-2">Pemberitahuan</h3>
-                <p id="alert-message" class="text-gray-500 text-sm mb-6 max-w-xs">Pesan default.</p>
-                
+                <p id="alert-message" class="text-gray-500 text-sm mb-6 max-w-xs">Pesan.</p>
                 <div class="flex space-x-3 w-full" id="alert-btn-wrapper">
                     <button id="alert-btn-cancel" class="w-1/2 bg-gray-100 text-gray-700 py-3.5 rounded-2xl font-bold hover:bg-gray-200 transition-all text-sm">Batal</button>
                     <button id="alert-btn-confirm" class="w-1/2 bg-orange-600 text-white py-3.5 rounded-2xl font-bold hover:bg-orange-700 transition-all text-sm">OK</button>
@@ -363,7 +362,7 @@
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1.5">Unggah Gambar Menu</label>
                     <input type="file" id="menu-image-input" accept="image/*" class="w-full text-xs text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer">
-                    <p class="text-[10px] text-gray-400 mt-1">Gambar otomatis dikompres ke format Base64 yang dioptimalkan cloud.</p>
+                    <p class="text-[10px] text-gray-400 mt-1">Gambar otomatis dikompres ke format Base64.</p>
                 </div>
                 
                 <div id="image-preview-container" class="hidden border border-orange-100 rounded-2xl p-2 bg-orange-50/20 relative">
@@ -405,14 +404,13 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, updateDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const DEFAULT_PHONE = "6285731606497"; 
         const ADMIN_PASSWORD = "bundaathar123";
-        const MAPS_URL = "https://maps.google.com/?q=Dsn+Sumbersari+RT054/RW012,+Barat,+Kec.+Padang,+Kab.Lumajang+67352";
+        const MAPS_URL = "https://maps.google.com/?q=Dsn+Sumbersari+Barat+Padang+Lumajang";
 
-        // Dynamic Setup
         document.getElementById('hero-wa-btn').href = `https://wa.me/${DEFAULT_PHONE}?text=Halo%20Bunda%20Athar,%20saya%20ingin%20bertanya%20mengenai%20menu%20hari%20ini.`;
         document.getElementById('footer-wa-link').href = `https://wa.me/${DEFAULT_PHONE}`;
         document.getElementById('maps-btn').href = MAPS_URL;
@@ -427,62 +425,97 @@
             appId: "dummy-app-id"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        let isFirebaseValid = firebaseConfig.apiKey !== "dummy-api-key";
+        let db, auth;
+
+        if (isFirebaseValid) {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+            } catch (e) {
+                console.error("Firebase Init Error:", e);
+                isFirebaseValid = false;
+            }
+        }
 
         const MENU_COLLECTION_PATH = `artifacts/${appId}/public/data/menu`;
         const SETTINGS_DOC_PATH = `artifacts/${appId}/public/data/settings/hero_content`;
 
-        let menuData = [];
-        let cart = [];
-        let isAdmin = false;
+        // Local Storage Keys (Fallback Mode)
+        const LOCAL_MENU_KEY = "dapur_bunda_menu";
+        const LOCAL_SETTINGS_KEY = "dapur_bunda_settings";
 
-        // Initialize Firebase Session
+        window.menuData = [];
+        window.cart = [];
+        window.isAdmin = false;
+
         async function initApp() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
+            if (isFirebaseValid) {
+                try {
                     await signInAnonymously(auth);
+                    listenToSettings();
+                    listenToMenu();
+                } catch (error) {
+                    console.error("Firebase Auth Error:", error);
+                    loadOfflineData();
                 }
-                listenToSettings();
-                listenToMenu();
-            } catch (error) {
-                console.error("Firebase Auth Error:", error);
-                showToast("⚠️ Masalah sinkronisasi cloud. Menggunakan mode luring.");
-                renderMenuFallback();
+            } else {
+                loadOfflineData();
             }
         }
 
-        // Live Settings Stream
+        function loadOfflineData() {
+            showToast("Mode luring aktif (Data disimpan secara lokal).");
+            
+            // Load Local Settings
+            const savedSettings = localStorage.getItem(LOCAL_SETTINGS_KEY);
+            if (savedSettings) {
+                const data = JSON.parse(savedSettings);
+                document.getElementById('hero-title').innerText = data.title || "Dapur Bunda Athar";
+                document.getElementById('hero-desc').innerText = data.description || "";
+            }
+
+            // Load Local Menu
+            const savedMenu = localStorage.getItem(LOCAL_MENU_KEY);
+            window.menuData = savedMenu ? JSON.parse(savedMenu) : getInitialFallbackMenu();
+            renderMenuGrid();
+        }
+
+        function getInitialFallbackMenu() {
+            return [
+                { id: "1", name: "Brownies Premium Bunda Athar", price: 35000, description: "Brownies panggang premium super lembut dengan cokelat melimpah.", image: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=600" },
+                { id: "2", name: "Mie Jebew Level Super", price: 15000, description: "Mie pedas khas yang gurih nikmat dengan taburan ayam cincang dan pangsit kriuk.", image: "https://images.unsplash.com/photo-1552611052-33e04de081de?w=600" }
+            ];
+        }
+
         function listenToSettings() {
             onSnapshot(doc(db, SETTINGS_DOC_PATH), (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     document.getElementById('hero-title').innerText = data.title || "Dapur Bunda Athar";
                     document.getElementById('hero-desc').innerText = data.description || "";
+                    localStorage.setItem(LOCAL_SETTINGS_KEY, JSON.stringify(data));
                 }
-            }, (err) => console.log("Settings Stream Error:", err));
+            }, () => loadOfflineData());
         }
 
-        // Live Menu Stream
         function listenToMenu() {
             onSnapshot(collection(db, MENU_COLLECTION_PATH), (querySnapshot) => {
-                menuData = [];
+                window.menuData = [];
                 querySnapshot.forEach((doc) => {
-                    menuData.push({ id: doc.id, ...doc.data() });
+                    window.menuData.push({ id: doc.id, ...doc.data() });
                 });
+                localStorage.setItem(LOCAL_MENU_KEY, JSON.stringify(window.menuData));
                 renderMenuGrid();
-            }, (err) => {
-                console.log("Menu Stream Error:", err);
-                renderMenuFallback();
-            });
+            }, () => loadOfflineData());
         }
 
         function renderMenuGrid() {
             const container = document.getElementById('menu-container');
-            if (menuData.length === 0) {
+            if (!container) return;
+            
+            if (window.menuData.length === 0) {
                 container.innerHTML = `
                     <div class="col-span-full text-center py-12 text-gray-400">
                         <i class="fa-solid fa-bowl-food text-4xl mb-3"></i>
@@ -491,118 +524,161 @@
                 return;
             }
 
-            container.innerHTML = menuData.map(item => `
-                <div class="bg-white rounded-[2.5rem] overflow-hidden border border-orange-100/70 p-4 flex flex-col menu-card relative ${isAdmin ? 'admin-border' : ''}">
+            container.innerHTML = window.menuData.map(item => `
+                <div class="bg-white rounded-[2.5rem] overflow-hidden border border-orange-100/70 p-4 flex flex-col menu-card relative ${window.isAdmin ? 'admin-border' : ''}">
                     <div class="relative w-full h-56 rounded-[1.8rem] overflow-hidden bg-gray-100 mb-5 shadow-sm">
-                        <img src="${item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600'}" 
-                             class="w-full h-full object-cover" alt="${item.name}">
+                        <img src="${item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600'}" class="w-full h-full object-cover" alt="${item.name}">
                         <span class="absolute bottom-4 right-4 bg-white/90 backdrop-blur-md text-orange-600 px-4 py-1.5 rounded-full font-extrabold text-sm shadow-sm">
                             Rp ${Number(item.price).toLocaleString('id-ID')}
                         </span>
                     </div>
                     <div class="px-2 flex-grow flex flex-col justify-between">
                         <div>
-                            <h3 class="font-extrabold text-xl text-gray-900 mb-2 truncate">${item.name}</h3>
-                            <p class="text-gray-500 text-xs md:text-sm leading-relaxed mb-6 line-clamp-3">${item.description}</p>
+                            <h3 class="font-extrabold text-lg text-gray-900 mb-1.5">${item.name}</h3>
+                            <p class="text-gray-500 text-xs md:text-sm leading-relaxed mb-5 line-clamp-2">${item.description}</p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="addToCart('${item.id}')" class="flex-grow bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white py-3.5 rounded-2xl font-bold transition-all text-xs md:text-sm flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-plus"></i> Tambah Belanjaan
+                            <button onclick="addToCart('${item.id}')" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-xl text-xs md:text-sm transition-all active:scale-95 flex items-center justify-center gap-2 shadow-md shadow-orange-500/10">
+                                <i class="fa-solid fa-cart-plus"></i> Tambah Belanja
                             </button>
-                            <button onclick="openMenuModal('${item.id}')" class="admin-only bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white p-3.5 rounded-2xl transition-all">
+                            ${window.isAdmin ? `
+                            <button onclick="openMenuModal('${item.id}')" class="bg-blue-50 text-blue-600 p-3 rounded-xl hover:bg-blue-600 hover:text-white transition-all">
                                 <i class="fa-solid fa-pen"></i>
-                            </button>
+                            </button>` : ''}
                         </div>
                     </div>
                 </div>
             `).join('');
         }
 
-        function renderMenuFallback() {
-            menuData = [
-                { id: '1', name: 'Brownies Premium Almond', price: 45000, description: 'Kue brownies lembut bertabur almond slice renyah kualitas terbaik.', image: '' },
-                { id: '2', name: 'Mie Jebew Super Pedas', price: 15000, description: 'Mie khas dengan level pedas nendang, bumbu gurih melimpah.', image: '' }
-            ];
-            renderMenuGrid();
-        }
-
-        // Global functions attachment for HTML interaction
-        window.handleAdminLogin = () => {
-            if (isAdmin) {
-                isAdmin = false;
-                document.body.classList.remove('admin-mode');
-                document.getElementById('admin-btn').innerHTML = '<i class="fa-solid fa-lock mr-1.5"></i>Login Admin';
-                showToast("🔒 Mode Admin Dinonaktifkan");
-                renderMenuGrid();
+        // Action Handlers Connected to Firebase / Local fallback
+        window.saveHeroContent = async (title, description) => {
+            if (isFirebaseValid) {
+                await setDoc(doc(db, SETTINGS_DOC_PATH), { title, description }, { merge: true });
             } else {
-                document.getElementById('password-modal').classList.remove('hidden');
-                document.getElementById('password-modal').classList.add('flex');
-                document.getElementById('admin-password').focus();
+                const data = { title, description };
+                localStorage.setItem(LOCAL_SETTINGS_KEY, JSON.stringify(data));
+                document.getElementById('hero-title').innerText = title;
+                document.getElementById('hero-desc').innerText = description;
             }
+            showToast("✅ Banner utama berhasil diperbarui!");
         };
 
+        window.saveMenuData = async (id, payload) => {
+            if (isFirebaseValid) {
+                if (id) {
+                    await setDoc(doc(db, `${MENU_COLLECTION_PATH}/${id}`), payload, { merge: true });
+                } else {
+                    const newDocRef = doc(collection(db, MENU_COLLECTION_PATH));
+                    await setDoc(newDocRef, payload);
+                }
+            } else {
+                if (id) {
+                    const idx = window.menuData.findIndex(m => m.id === id);
+                    if (idx !== -1) window.menuData[idx] = { ...window.menuData[idx], ...payload };
+                } else {
+                    payload.id = Date.now().toString();
+                    window.menuData.push(payload);
+                }
+                localStorage.setItem(LOCAL_MENU_KEY, JSON.stringify(window.menuData));
+                renderMenuGrid();
+            }
+            showToast("✅ Menu berhasil disimpan!");
+        };
+
+        window.deleteMenuData = async (id) => {
+            if (isFirebaseValid) {
+                await deleteDoc(doc(db, `${MENU_COLLECTION_PATH}/${id}`));
+            } else {
+                window.menuData = window.menuData.filter(m => m.id !== id);
+                localStorage.setItem(LOCAL_MENU_KEY, JSON.stringify(window.menuData));
+                renderMenuGrid();
+            }
+            showToast("❌ Menu telah dihapus.");
+        };
+
+        // UI Global Bridges
+        window.handleAdminLogin = () => {
+            document.getElementById('password-modal').classList.remove('hidden');
+            document.getElementById('password-modal').classList.add('flex');
+        };
+        window.closePasswordModal = () => {
+            document.getElementById('password-modal').classList.add('hidden');
+            document.getElementById('password-modal').classList.remove('flex');
+            document.getElementById('admin-password').value = "";
+            document.getElementById('password-error').classList.add('hidden');
+        };
         window.checkAdminPassword = () => {
-            const pwd = document.getElementById('admin-password').value;
-            if (pwd === ADMIN_PASSWORD) {
-                isAdmin = true;
+            const input = document.getElementById('admin-password').value;
+            if (input === ADMIN_PASSWORD) {
+                window.isAdmin = true;
                 document.body.classList.add('admin-mode');
-                document.getElementById('admin-btn').innerHTML = '<i class="fa-solid fa-unlock mr-1.5"></i>Keluar Admin';
-                window.closePasswordModal();
-                showToast("🔓 Sukses Masuk Mode Admin");
+                showToast("🔓 Sukses masuk sebagai Admin Dapur!");
+                closePasswordModal();
                 renderMenuGrid();
             } else {
                 const err = document.getElementById('password-error');
-                err.innerText = "Kata sandi salah! Silakan coba lagi.";
+                err.innerText = "Kata sandi salah. Silakan coba lagi.";
                 err.classList.remove('hidden');
             }
         };
 
-        window.closePasswordModal = () => {
-            document.getElementById('password-modal').classList.add('hidden');
-            document.getElementById('password-modal').classList.remove('flex');
-            document.getElementById('admin-password').value = '';
-            document.getElementById('password-error').classList.add('hidden');
+        window.toggleMobileMenu = () => {
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (sidebar.classList.contains('translate-x-full')) {
+                sidebar.classList.remove('translate-x-full');
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.add('opacity-100'), 50);
+            } else {
+                sidebar.classList.add('translate-x-full');
+                overlay.classList.remove('opacity-100');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+            }
         };
 
-        // Hero Content Editor Logic
+        window.showToast = (msg) => {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.remove('opacity-0', 'pointer-events-none');
+            t.classList.add('opacity-100');
+            setTimeout(() => {
+                t.classList.remove('opacity-100');
+                t.classList.add('opacity-0', 'pointer-events-none');
+            }, 3500);
+        };
+
         window.openHeroEditModal = () => {
             document.getElementById('edit-hero-title').value = document.getElementById('hero-title').innerText;
             document.getElementById('edit-hero-desc').value = document.getElementById('hero-desc').innerText;
             document.getElementById('hero-edit-modal').classList.remove('hidden');
             document.getElementById('hero-edit-modal').classList.add('flex');
         };
-
         window.closeHeroEditModal = () => {
             document.getElementById('hero-edit-modal').classList.add('hidden');
             document.getElementById('hero-edit-modal').classList.remove('flex');
         };
 
-        document.getElementById('hero-edit-form').onsubmit = async (e) => {
+        document.getElementById('hero-edit-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const title = document.getElementById('edit-hero-title').value;
-            const description = document.getElementById('edit-hero-desc').value;
-            try {
-                await setDoc(doc(db, SETTINGS_DOC_PATH), { title, description }, { merge: true });
-                showToast("✅ Konten Utama Berhasil Diperbarui!");
-                window.closeHeroEditModal();
-            } catch (err) {
-                showToast("❌ Gagal menyimpan data ke cloud");
-            }
-        };
+            const t = document.getElementById('edit-hero-title').value;
+            const d = document.getElementById('edit-hero-desc').value;
+            await window.saveHeroContent(t, d);
+            closeHeroEditModal();
+        });
 
-        // Menu CRUD Logic
-        window.openMenuModal = (id = '') => {
+        window.openMenuModal = (id = null) => {
             const form = document.getElementById('menu-form');
             form.reset();
+            document.getElementById('edit-id').value = id || '';
             document.getElementById('menu-image-data').value = '';
             document.getElementById('image-preview-container').classList.add('hidden');
             document.getElementById('btn-delete-menu').classList.add('hidden');
 
             if (id) {
-                const item = menuData.find(m => m.id === id);
+                document.getElementById('modal-title').innerText = "Edit Hidangan Menu";
+                const item = window.menuData.find(m => m.id === id);
                 if (item) {
-                    document.getElementById('modal-title').innerText = "Edit Hidangan Pilihan";
-                    document.getElementById('edit-id').value = item.id;
                     document.getElementById('menu-name').value = item.name;
                     document.getElementById('menu-price').value = item.price;
                     document.getElementById('menu-desc').value = item.description;
@@ -614,8 +690,7 @@
                     document.getElementById('btn-delete-menu').classList.remove('hidden');
                 }
             } else {
-                document.getElementById('modal-title').innerText = "Tambah Menu Masakan Baru";
-                document.getElementById('edit-id').value = '';
+                document.getElementById('modal-title').innerText = "Tambah Menu Baru";
             }
             document.getElementById('menu-modal').classList.remove('hidden');
             document.getElementById('menu-modal').classList.add('flex');
@@ -626,26 +701,24 @@
             document.getElementById('menu-modal').classList.remove('flex');
         };
 
-        // Optimized Image Processing (Base64)
-        document.getElementById('menu-image-input').onchange = function() {
-            const file = this.files[0];
+        document.getElementById('menu-image-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
             if (!file) return;
 
             const spinner = document.getElementById('compression-spinner');
-            const previewCont = document.getElementById('image-preview-container');
-            const previewImg = document.getElementById('image-preview-display');
+            const previewBox = document.getElementById('image-preview-container');
+            const previewDisplay = document.getElementById('image-preview-display');
             
+            previewBox.classList.remove('hidden');
             spinner.classList.remove('hidden');
             spinner.classList.add('flex');
-            previewCont.classList.remove('hidden');
 
             const reader = new FileReader();
-            reader.onload = function (e) {
+            reader.onload = function(event) {
                 const img = new Image();
-                img.src = e.target.result;
+                img.src = event.target.result;
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
                     const MAX_WIDTH = 500;
                     let width = img.width;
                     let height = img.height;
@@ -656,19 +729,21 @@
                     }
                     canvas.width = width;
                     canvas.height = height;
+                    const ctx = canvas.getContext('2D');
                     ctx.drawImage(img, 0, 0, width, height);
                     
-                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-                    document.getElementById('menu-image-data').value = compressedDataUrl;
-                    previewImg.src = compressedDataUrl;
-                    spinner.classList.add('hidden');
+                    const base64 = canvas.toDataURL('image/jpeg', 0.7);
+                    document.getElementById('menu-image-data').value = base64;
+                    previewDisplay.src = base64;
+                    
                     spinner.classList.remove('flex');
+                    spinner.classList.add('hidden');
                 };
             };
             reader.readAsDataURL(file);
-        };
+        });
 
-        document.getElementById('menu-form').onsubmit = async (e) => {
+        document.getElementById('menu-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('edit-id').value;
             const payload = {
@@ -677,104 +752,124 @@
                 description: document.getElementById('menu-desc').value,
                 image: document.getElementById('menu-image-data').value
             };
+            await window.saveMenuData(id, payload);
+            closeMenuModal();
+        });
 
-            try {
-                if (id) {
-                    await updateDoc(doc(db, MENU_COLLECTION_PATH, id), payload);
-                    showToast("✨ Menu berhasil diperbarui");
-                } else {
-                    await addDoc(collection(db, MENU_COLLECTION_PATH), payload);
-                    showToast("🎉 Menu baru berhasil didaftarkan");
-                }
-                window.closeMenuModal();
-            } catch (err) {
-                showToast("❌ Gagal menyimpan data produk");
-            }
-        };
-
-        window.deleteCurrentMenu = () => {
+        document.getElementById('btn-delete-menu').addEventListener('click', async () => {
             const id = document.getElementById('edit-id').value;
             if (!id) return;
             
-            window.showCustomConfirm(
-                "Hapus Menu", 
-                "Apakah Anda yakin ingin menghapus sajian hidangan ini secara permanen dari katalog?", 
-                async () => {
-                    try {
-                        await deleteDoc(doc(db, MENU_COLLECTION_PATH, id));
-                        showToast("🗑️ Menu berhasil dihapus");
-                        window.closeMenuModal();
-                    } catch (e) {
-                        showToast("❌ Gagal menghapus data");
-                    }
-                }
-            );
-        };
+            document.getElementById('custom-alert-modal').classList.remove('hidden');
+            document.getElementById('custom-alert-modal').classList.add('flex');
+            document.getElementById('alert-title').innerText = "Konfirmasi Hapus";
+            document.getElementById('alert-message').innerText = "Apakah Anda yakin ingin menghapus menu hidangan ini?";
+            document.getElementById('alert-icon-container').className = "w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-red-100 text-red-600";
+            document.getElementById('alert-icon').className = "fa-solid fa-trash-can text-3xl";
 
-        // Cart & Checkout Logic
+            document.getElementById('alert-btn-confirm').onclick = async () => {
+                await window.deleteMenuData(id);
+                document.getElementById('custom-alert-modal').classList.add('hidden');
+                closeMenuModal();
+            };
+            document.getElementById('alert-btn-cancel').onclick = () => {
+                document.getElementById('custom-alert-modal').classList.add('hidden');
+            };
+        });
+
+        // Cart Logic
         window.addToCart = (id) => {
-            const item = menuData.find(m => m.id === id);
+            const item = window.menuData.find(m => m.id === id);
             if (!item) return;
 
-            const existing = cart.find(c => c.id === id);
+            const existing = window.cart.find(c => c.id === id);
             if (existing) {
-                existing.qty += 1;
+                existing.qty++;
             } else {
-                cart.push({ ...item, qty: 1 });
+                window.cart.push({ ...item, qty: 1 });
             }
             updateCartUI();
-            showToast(`🛒 ${item.name} dimasukkan ke keranjang`);
-        };
-
-        window.updateCartQty = (id, change) => {
-            const item = cart.find(c => c.id === id);
-            if (!item) return;
-
-            item.qty += change;
-            if (item.qty <= 0) {
-                cart = cart.filter(c => c.id !== id);
-            }
-            updateCartUI();
+            showToast(`🛒 ${item.name} dimasukkan ke keranjang!`);
         };
 
         function updateCartUI() {
-            const count = cart.reduce((acc, c) => acc + c.qty, 0);
-            document.getElementById('cart-count').innerText = count;
+            const countBadge = document.getElementById('cart-count');
+            const totalItems = window.cart.reduce((sum, c) => sum + c.qty, 0);
+            countBadge.innerText = totalItems;
 
-            const itemsCont = document.getElementById('cart-items');
-            if (cart.length === 0) {
-                itemsCont.innerHTML = `<p class="text-center py-6 text-gray-400 text-sm">Keranjang belanja Anda kosong.</p>`;
-                document.getElementById('cart-total').innerText = "Rp 0";
+            const container = document.getElementById('cart-items');
+            const totalContainer = document.getElementById('cart-total');
+            
+            if (window.cart.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-400 text-sm py-8">Keranjang Anda masih kosong.</p>`;
+                totalContainer.innerText = "Rp 0";
                 return;
             }
 
-            let total = 0;
-            itemsCont.innerHTML = cart.map(c => {
-                const subtotal = c.price * c.qty;
-                total += subtotal;
+            let grandTotal = 0;
+            container.innerHTML = window.cart.map(c => {
+                const sub = c.price * c.qty;
+                grandTotal += sub;
                 return `
-                    <div class="flex items-center justify-between border-b border-gray-50 pb-3">
+                    <div class="flex justify-between items-center bg-gray-50 p-3.5 rounded-xl border border-gray-100 text-sm">
                         <div class="max-w-[60%]">
-                            <h4 class="font-bold text-gray-800 text-sm truncate">${c.name}</h4>
-                            <p class="text-xs text-orange-600 font-semibold">Rp ${subtotal.toLocaleString('id-ID')}</p>
+                            <h5 class="font-bold text-gray-800 truncate">${c.name}</h5>
+                            <p class="text-xs text-gray-400 mt-0.5">Rp ${c.price.toLocaleString('id-ID')} x ${c.qty}</p>
                         </div>
-                        <div class="flex items-center space-x-2.5 bg-gray-50 p-1.5 rounded-xl border border-gray-100">
-                            <button onclick="updateCartQty('${c.id}', -1)" class="w-7 h-7 bg-white rounded-lg text-xs font-bold shadow-sm hover:bg-orange-500 hover:text-white transition-all text-gray-600">-</button>
-                            <span class="text-sm font-extrabold px-1 text-gray-800">${c.qty}</span>
-                            <button onclick="updateCartQty('${c.id}', 1)" class="w-7 h-7 bg-white rounded-lg text-xs font-bold shadow-sm hover:bg-orange-500 hover:text-white transition-all text-gray-600">+</button>
+                        <div class="flex items-center gap-3">
+                            <span class="font-extrabold text-orange-600 text-xs">Rp ${sub.toLocaleString('id-ID')}</span>
+                            <div class="flex border border-gray-200 bg-white rounded-lg overflow-hidden shadow-sm scale-90">
+                                <button onclick="changeQty('${c.id}', -1)" class="px-2 py-1 hover:bg-gray-100 text-gray-500 font-bold">-</button>
+                                <span class="px-2 py-1 text-xs font-bold text-gray-700 min-w-[20px] text-center bg-gray-50/50">${c.qty}</span>
+                                <button onclick="changeQty('${c.id}', 1)" class="px-2 py-1 hover:bg-gray-100 text-gray-500 font-bold">+</button>
+                            </div>
                         </div>
                     </div>`;
             }).join('');
-            
-            document.getElementById('cart-total').innerText = `Rp ${total.toLocaleString('id-ID')}`;
+            totalContainer.innerText = `Rp ${grandTotal.toLocaleString('id-ID')}`;
         }
+
+        window.changeQty = (id, delta) => {
+            const target = window.cart.find(c => c.id === id);
+            if (!target) return;
+            
+            target.qty += delta;
+            if (target.qty <= 0) {
+                window.cart = window.cart.filter(c => c.id !== id);
+            }
+            updateCartUI();
+        };
 
         window.showCart = () => {
             updateCartUI();
             document.getElementById('cart-modal').classList.remove('hidden');
             document.getElementById('cart-modal').classList.add('flex');
         };
-
         window.closeCart = () => {
             document.getElementById('cart-modal').classList.add('hidden');
-            document.getElementById('cart-
+            document.getElementById('cart-modal').classList.remove('flex');
+        };
+
+        window.checkoutWhatsApp = () => {
+            if (window.cart.length === 0) return;
+            let text = `Halo *Dapur Bunda Athar*, saya ingin memesan menu berikut:\n\n`;
+            let total = 0;
+            
+            window.cart.forEach((c, idx) => {
+                const sub = c.price * c.qty;
+                total += sub;
+                text += `${idx + 1}. *${c.name}*\n   Jumlah: ${c.qty} x Rp ${c.price.toLocaleString('id-ID')} = *Rp ${sub.toLocaleString('id-ID')}*\n`;
+            });
+            
+            text += `\n💰 *Total Pembayaran: Rp ${total.toLocaleString('id-ID')}*\n\nMohon informasi ketersediaan pesanan ini, terima kasih!`;
+            window.open(`https://wa.me/${DEFAULT_PHONE}?text=${encodeURIComponent(text)}`, '_blank');
+            window.cart = [];
+            updateCartUI();
+            closeCart();
+        };
+
+        // Run App
+        initApp();
+    </script>
+</body>
+</html>
